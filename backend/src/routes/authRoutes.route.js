@@ -3,9 +3,9 @@ import { loginController, logoutController, signupController } from "../controll
 
 const authRouter = express.Router();
 
-authRouter.get("/signup", signupController);
-authRouter.get("/login", loginController);
-authRouter.get("/logout", logoutController);
+authRouter.post("/signup", signupController);
+authRouter.post("/login", loginController);
+authRouter.post("/logout", logoutController);
 
 
 export default authRouter;
