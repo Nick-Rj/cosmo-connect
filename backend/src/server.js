@@ -31,10 +31,17 @@ if(process.env.NODE_ENV === "production") {
 }
 
 
+mongoConnect().then(() => {
+    app.listen(PORT, () =>{
+        console.log(`Server is up and running at ${PORT}`);
+    });
+}).catch((error) => {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+});
 
-
-app.listen(PORT, () =>{
-    console.log(`Server is up and running at ${PORT}`);
-    mongoConnect();
+// app.listen(PORT, () =>{
+//     console.log(`Server is up and running at ${PORT}`);
+    // mongoConnect(); // Already connected above
     
-})
+// })

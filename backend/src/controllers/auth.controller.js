@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import User from "../models/User.model.js";
+import User from "../models/user.model.js";
 import { emailValidator, generateToken, usernameGenerator } from "../utils/syncHandlers.js";
 
 export const signupController = async (req, res) => {
@@ -46,13 +46,13 @@ export const signupController = async (req, res) => {
     // const newUser = await User.create({fullName, email, password: hashedPassword, username: usernameValue});
 
     if(newUser) {
-        generateToken(newUser._id, res);
         const savedUser = await newUser.save();
+        generateToken(savedUser._id, res);
         res.status(201).json({
             message: "User signup successful!",
             success: true,
             user: {
-                ...savedUser?._doc,
+                ...savedUser.toObject(),
                 password: undefined
             }
         })

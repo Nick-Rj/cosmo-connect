@@ -8,7 +8,9 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
+        lowercase: true,
+        trim: true
     },
     password: {
         type: String,
@@ -18,7 +20,10 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         // required: true,
-        unique: true
+        unique: true,
+        trim: true,
+        lowercase: true,
+        maxlength: [20, "Username must be at most 20 characters long!"]
     },
     profilePicture: {
         type: String,
