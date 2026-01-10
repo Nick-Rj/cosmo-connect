@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
-import User from "../models/user.model.js";
+import User from "../models/User.model.js";
 import { emailValidator, generateToken, usernameGenerator } from "../utils/syncHandlers.js";
+import { sendWelcomeEmail } from "../emails/emailHandlers.js";
+import { getEnv } from "../utils/env.js";
 
 export const signupController = async (req, res) => {
     const {fullName, email, password, username} = req.body;
@@ -57,7 +59,13 @@ export const signupController = async (req, res) => {
             }
         })
 
-        // TODO: Send welcome email using email service [Mailtrap]
+        // Send welcome email using email service [Mailtrap]
+        try {
+            await sendWelcomeEmail(savedUser.fullName, savedUser.email, getEnv("CLIENT_URL"));
+        } catch (error) {
+            console.error("Error sending welcome email:", error);
+        }
+        
     } else {
         res.status(400).json({
             message: "User signup failed. Invalid data found!",
