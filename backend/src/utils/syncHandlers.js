@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { getEnv } from "./env.js";
 
 export const emailValidator = (email) => {
 //    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -19,15 +20,15 @@ export const usernameGenerator = (email) => {
 }
 
 export const generateToken = (userId, res) => {
-    if(!process.env.AUTH_JWT_SECRET) {
+    if(!getEnv("AUTH_JWT_SECRET")) {
         throw new Error("AUTH_JWT_SECRET is not defined in environment variables");
     }
-    const token = jwt.sign({userId}, process.env.AUTH_JWT_SECRET, {expiresIn: "7d"});
+    const token = jwt.sign({userId}, getEnv("AUTH_JWT_SECRET"), {expiresIn: "7d"});
 
     res.cookie('jwt', token, {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
         httpOnly: true, // prevents XSS attacks : cross-site scripting
-        secure: process.env.NODE_ENV === "production", // true in production
+        secure: getEnv("NODE_ENV") === "production", // true in production
         sameSite: "strict", // CSRF protection
         path: "/" // cookie is available for the entire domain
     })
