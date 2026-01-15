@@ -84,23 +84,29 @@ export const signupController = async (req, res) => {
 
 export const loginController = async (req, res) => {
     const {email, password} = req.body;
-    const fetchedUser = await User.findOne({email});
-    if(!fetchedUser) {
-        return res.status(400).json({success: false, message: "Please enter valid credentials!"});
+    try {
+        const fetchedUser = await User.findOne({email});
+        if(!fetchedUser) {
+            return res.status(400).json({success: false, message: "Please enter valid credentials!"});
+        }
+        
+        const isPassVerified = await bcrypt.compare(password, fetchedUser.password);
+        if(!isPassVerified) {
+            return res.status(400).json({success: false, message: "Please enter valid credentials!"});
+        }
+        
+        generateToken(fetchedUser?._id, res);
+        res.status(201).json({success: true, user:{...fetchedUser.toObject(), password: undefined}, message: "Login Successful!"});
+    } catch(error) {
+        console.log("Error while logging in!", error);
+        res.status(500).json({success: false, message: "Internal Server Error!"});
+        
     }
-
-    const isPassVerified = await bcrypt.compare(password, fetchedUser.password);
-    if(!isPassVerified) {
-        return res.status(400).json({succss: false, message: "Please enter valid credentials!"});
-    }
-
-    generateToken(fetchedUser?._id, res);
-    res.status(201).json({success: true, user:fetchedUser, message: "Login Successful!"});
     
 }
 
 export const logoutController = (_, res) => {
     console.log("User logged out sucessfully!");
     res.cookie('jwt', "", {maxAge: 0});
-    res.status(200).json({succes: true, message: "User logged out successfully!"})
+    res.status(200).json({success: true, message: "User logged out successfully!"})
 }
