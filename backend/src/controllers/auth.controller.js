@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import User from "../models/User.model.js";
+import User from "../models/user.model.js";
 import { emailValidator, generateToken, usernameGenerator } from "../utils/syncHandlers.js";
 import { sendWelcomeEmail } from "../emails/emailHandlers.js";
 import { getEnv } from "../utils/env.js";
@@ -82,10 +82,25 @@ export const signupController = async (req, res) => {
     }
 }
 
-export const loginController = (req, res) => {
-    res.send("Login Successful!");
+export const loginController = async (req, res) => {
+    const {email, password} = req.body;
+    const fetchedUser = await User.findOne({email});
+    if(!fetchedUser) {
+        return res.status(400).json({success: false, message: "Please enter valid credentials!"});
+    }
+
+    const isPassVerified = await bcrypt.compare(password, fetchedUser.password);
+    if(!isPassVerified) {
+        return res.status(400).json({succss: false, message: "Please enter valid credentials!"});
+    }
+
+    generateToken(fetchedUser?._id, res);
+    res.status(201).json({success: true, user:fetchedUser, message: "Login Successful!"});
+    
 }
 
-export const logoutController = (req, res) => {
-    res.send("Logout Successful!");
+export const logoutController = (_, res) => {
+    console.log("User logged out sucessfully!");
+    res.cookie('jwt', "", {maxAge: 0});
+    res.status(200).json({succes: true, message: "User logged out successfully!"})
 }
