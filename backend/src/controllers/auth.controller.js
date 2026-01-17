@@ -100,7 +100,7 @@ export const loginController = async (req, res) => {
     }
 
     generateToken(fetchedUser?._id, res);
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       user: { ...fetchedUser.toObject(), password: undefined },
       message: 'Login Successful!',
@@ -122,6 +122,7 @@ export const updateUserProfile = async (req, res) => {
     const newData = { ...req.body };
     const existingData = { ...req.user._doc };
 
+    // Mandatory check for profile picture
     if (!newData?.profilePicture && !existingData?.profilePicture) {
       return res.status(400).json({ success: false, message: 'Profile Picture Not Found!' });
     }
@@ -133,6 +134,12 @@ export const updateUserProfile = async (req, res) => {
     }
 
     if (newData?.profilePicture) {
+      // Validate base64 image size (eg: limit to 5MB)
+      const base64Size = Buffer.byteLength(newData?.profilePicture, 'base64');
+      const maxSizeAllowed = 5 * 1024 * 1024;
+      if (base64Size > maxSizeAllowed) {
+        return res.status(400).json({ success: false, message: ' Image size exceeds 5MB limit!' });
+      }
       const profilePicUploadRes = await cloudinary.uploader.upload(newData?.profilePicture);
 
       if (!profilePicUploadRes) {
@@ -140,9 +147,16 @@ export const updateUserProfile = async (req, res) => {
       }
 
       newData.profilePicture = profilePicUploadRes?.secure_url;
+
+      // Whitelisted fields for updating Profile.
+      const whitelistedFields = ['fullName', 'profilePicture', 'username'];
+      const sanitizedData = {};
+      for (field in whitelistedFields) {
+        sanitizedData[field] = newData[field];
+      }
     }
 
-    const updatedUser = await User.findByIdAndUpdate(userId, { ...newData }, { new: true });
+    const updatedUser = await User.findByIdAndUpdate(userId, { ...sanitizedData }, { new: true });
 
     if (!updatedUser) {
       return res.status(400).json({ success: false, message: 'Failed to fetch the updated user!' });

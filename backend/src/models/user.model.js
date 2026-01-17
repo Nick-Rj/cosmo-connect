@@ -25,6 +25,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       maxlength: [20, 'Username must be at most 20 characters long!'],
+      minlength: [1, 'Username cannot be empty.'],
     },
     profilePicture: {
       type: String,

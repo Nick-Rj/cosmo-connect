@@ -6,20 +6,20 @@ export const authenticateUser = async (req, res, next) => {
   try {
     const token = req.cookies.jwt;
     if (!token) {
-      return res.status(404).json({ success: false, message: 'Unauthorized: No token found!' });
+      return res.status(401).json({ success: false, message: 'Unauthorized: No token found!' });
     }
 
-    const decodedToken = jwt.verify(token, getEnv('AUTH_JWT_SECRET'));
-    if (!decodedToken) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'Unauthorized: No valid token found!' });
+    const decodedToken = { parsedToken: '' };
+    try {
+      decodedToken.parsedToken = jwt.verify(token, getEnv('AUTH_JWT_SECRET'));
+    } catch (jwtError) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: Invalid token!' });
     }
 
-    const fetchedUser = await User.findById(decodedToken?.userId).select('-password');
+    const fetchedUser = await User.findById(decodedToken?.parsedToken.userId).select('-password');
 
     if (!fetchedUser) {
-      return res.status(404).json({ success: false, message: 'Unauthorized: Not Validated!' });
+      return res.status(401).json({ success: false, message: 'Unauthorized: User not found!' });
     }
 
     req.user = fetchedUser;

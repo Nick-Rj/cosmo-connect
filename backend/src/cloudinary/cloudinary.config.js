@@ -3,8 +3,8 @@ import { getEnv } from '../utils/env.js';
 
 const cloudinaryConfigHandler = () => {
   if (
-    !getEnv('CLOUDINARY_CLOUD_NAME') &&
-    !getEnv('CLOUDINARY_API_KEY') &&
+    !getEnv('CLOUDINARY_CLOUD_NAME') ||
+    !getEnv('CLOUDINARY_API_KEY') ||
     !getEnv('CLOUDINARY_API_SECRET')
   ) {
     throw new Error('Invalid cloudinary configurations!');
