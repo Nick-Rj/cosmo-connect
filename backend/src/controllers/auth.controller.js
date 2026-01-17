@@ -3,6 +3,7 @@ import User from "../models/user.model.js";
 import { emailValidator, generateToken, usernameGenerator } from "../utils/syncHandlers.js";
 import { sendWelcomeEmail } from "../emails/emailHandlers.js";
 import { getEnv } from "../utils/env.js";
+import cloudinary from "../cloudinary/cloudinary.config.js";
 
 export const signupController = async (req, res) => {
     const {fullName, email, password, username} = req.body;
@@ -50,24 +51,26 @@ export const signupController = async (req, res) => {
     if(newUser) {
         const savedUser = await newUser.save();
         generateToken(savedUser._id, res);
-        res.status(201).json({
+
+        // Send welcome email using email service [Mailtrap]
+
+        try {
+            await sendWelcomeEmail(savedUser.fullName, savedUser.email, getEnv("CLIENT_URL"));
+        } catch (error) {
+            console.error("Error sending welcome email:", error);
+        }
+
+        return res.status(201).json({
             message: "User signup successful!",
             success: true,
             user: {
                 ...savedUser.toObject(),
                 password: undefined
             }
-        })
-
-        // Send welcome email using email service [Mailtrap]
-        try {
-            await sendWelcomeEmail(savedUser.fullName, savedUser.email, getEnv("CLIENT_URL"));
-        } catch (error) {
-            console.error("Error sending welcome email:", error);
-        }
+        });
         
     } else {
-        res.status(400).json({
+        return res.status(400).json({
             message: "User signup failed. Invalid data found!",
             success: false
         })
@@ -96,10 +99,10 @@ export const loginController = async (req, res) => {
         }
         
         generateToken(fetchedUser?._id, res);
-        res.status(201).json({success: true, user:{...fetchedUser.toObject(), password: undefined}, message: "Login Successful!"});
+        return res.status(201).json({success: true, user:{...fetchedUser.toObject(), password: undefined}, message: "Login Successful!"});
     } catch(error) {
         console.log("Error while logging in!", error);
-        res.status(500).json({success: false, message: "Internal Server Error!"});
+        return res.status(500).json({success: false, message: "Internal Server Error!"});
         
     }
     
@@ -108,5 +111,49 @@ export const loginController = async (req, res) => {
 export const logoutController = (_, res) => {
     console.log("User logged out sucessfully!");
     res.cookie('jwt', "", {maxAge: 0});
-    res.status(200).json({success: true, message: "User logged out successfully!"})
+    return res.status(200).json({success: true, message: "User logged out successfully!"})
 }
+
+export const updateUserProfile = async (req, res) => {
+    try {
+
+        const newData = {...req.body};
+        const existingData = {...req.user._doc};
+
+        console.log("Req body", newData);
+        
+
+        if(!newData?.profilePicture && !existingData?.profilePicture) {
+            return res.status(400).json({ success: false, message: "Profile Picture not found!"});
+        }
+
+        if(newData?.username && newData?.username?.trim()?.length === 0) {
+           newData.username = existingData?.username;
+        }
+        
+        if(newData?.email?.length > 0 ) {
+        return res.status(400).json({ success: false, message: "Email change is not allowed for any user!"});
+        }
+    
+        const userId = existingData._id;
+    
+        if(!userId) {
+        return res.status(400).json({ success: false, message: "No user found!"});
+        }
+    
+        const profilePicUploadRes = await cloudinary.uploader.upload(newData?.profilePicture);
+
+        if(!profilePicUploadRes) {
+            throw new Error("Profile picture upload failed!");
+        }
+    
+        const updatedUser = await User.findByIdAndUpdate(userId, {
+            ...newData, profilePicture: profilePicUploadRes?.secure_url,}, {new: true}
+        )
+        return res.status(200).json({ success: true, message: "User data updated successfully!", user: updatedUser});
+    } catch(error) {
+        console.log("Update profle error!",error);
+        return res.status(500).json({ success: false, message: "Internal Server Error!"});
+        
+  }   
+};

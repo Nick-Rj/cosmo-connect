@@ -1,16 +1,24 @@
 import express from 'express';
 import path from "path";
+import cookieParser from "cookie-parser";
 import authRoutes from './routes/authRoutes.route.js';
 import messageRoutes from './routes/messageRoutes.route.js';
 import mongoConnect from './db/mongoDbConnect.js';
 import { getEnv } from './utils/env.js';
+import swaggerDocs from './swagger/swagger.config.js';
 
 // Setting up the server
 const app = express();
 const PORT = getEnv("PORT") || 5000;
 
+// Initialzying Swagger
+swaggerDocs(app);
+
 // Parsing JSON from requests
 app.use(express.json());
+
+// Parsing Cookies from response
+app.use(cookieParser());
 
 // Deployment Config
 const __dirname = path.resolve();
