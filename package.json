@@ -11,7 +11,8 @@
     "install:frontend": "cd frontend && npm install",
     "build:frontend": "cd frontend && npm run build",
     "build": "npm run install:backend && npm run install:frontend && npm run build:frontend",
-    "start": "npm start --prefix backend"
+    "start": "npm start --prefix backend",
+    "format": "prettier --write \"**/*.{js,jsx,json,md}\""
   },
   "repository": {
     "type": "git",
@@ -20,6 +21,11 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3"
+  },
   "type": "module",
   "bugs": {
     "url": "https://github.com/Nick-Rj/cosmo-connect/issues"
