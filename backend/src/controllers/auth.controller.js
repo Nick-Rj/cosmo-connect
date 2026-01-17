@@ -156,3 +156,7 @@ export const updateUserProfile = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Internal Server Error!' });
   }
 };
+
+export const acknowledgeUser = (req, res) => {
+  return res.status(200).json(req.user);
+};
