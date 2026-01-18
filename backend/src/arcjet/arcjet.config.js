@@ -45,7 +45,7 @@ const arcjetHandler = () => {
     return aj;
   } catch (error) {
     console.log('Error in arcjet handler', error);
-    throw new Error('Error in hadling arcjet!');
+    throw new Error('Error in handling arcjet!');
   }
 };
 
